@@ -42,7 +42,3 @@ const run: () => Promise<void> = async () => {
 
 run().catch((err) => console.log(err));
 
-
-app.listen(port, () => {
-    console.log(`Server started on ${port} port`);
-});
