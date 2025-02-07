@@ -6,6 +6,8 @@ import usersRouter from './routers/users';
 import config from "./config";
 import mongoose from "mongoose";
 import User from "./models/User";
+import {Messages} from "./types";
+import {Message} from "./models/Message";
 
 const app = express();
 expressWs(app);
@@ -26,14 +28,21 @@ interface IncomingMessage {
     payload: string;
 }
 
-router.ws('/chat', (ws, req) => {
+router.ws('/chat', async (ws, req) => {
     connectedClients.push(ws);
     console.log('Client connected. Client total: ' + connectedClients.length);
 
+    const messages : Messages[] = await Message.find().populate('user', 'displayName').limit(30).sort({ _id: -1 });
 
+    ws.send(
+        JSON.stringify({
+            type: 'IN_COMMING_MESSAGE',
+            payload: messages,
+        }),
+    )
     ws.on('message', async (message) => {
         try {
-            const decodedMessage = JSON.parse(message.toString()) as IncomingMessage;
+            const decodedMessage = JSON.parse(message.toString());
 
             if (decodedMessage.type === "LOGIN") {
                 const token = decodedMessage.payload;
@@ -51,6 +60,21 @@ router.ws('/chat', (ws, req) => {
                         }
                     }))
                 });
+            }
+
+            if(decodedMessage.type === "SEND_MESSAGE") {
+
+                const newMessage = new Message({
+                    user: decodedMessage.payload.user,
+                    message: decodedMessage.payload.message,
+                })
+                await newMessage.save();
+
+                const response = {type: "SEND_MESSAGE", payload: newMessage};
+
+                connectedClients.forEach((clientWS) => {
+                    clientWS.send(JSON.stringify(response))
+                })
             }
         } catch (error) {
             ws.send(JSON.stringify({error: "Invalid message format"}))
