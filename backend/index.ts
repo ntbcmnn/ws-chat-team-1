@@ -56,7 +56,8 @@ router.ws('/chat', async (ws, req) => {
                 connectedClients.forEach(clientWs => {
                     clientWs.send(JSON.stringify({
                         payload:{
-                            username: user?.username
+                            username: user?.username,
+                            displayName: user?.displayName
                         }
                     }))
                 });
@@ -70,7 +71,9 @@ router.ws('/chat', async (ws, req) => {
                 })
                 await newMessage.save();
 
-                const response = {type: "SEND_MESSAGE", payload: newMessage};
+                const saveMsg = await Message.findById(newMessage._id).populate('user', 'displayName');
+
+                const response = {type: "SEND_MESSAGE", payload: saveMsg};
 
                 connectedClients.forEach((clientWS) => {
                     clientWS.send(JSON.stringify(response))

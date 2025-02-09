@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { WebSocket } from 'vite';
-import { IMessages, ISendMessage } from '../../types';
+import { IMessages } from '../../types';
 import Messages from '../../components/Messages/Messages.tsx';
 
 const Home = () => {
@@ -12,10 +11,13 @@ const Home = () => {
     ws.current = new WebSocket('ws://localhost:8000/chat');
 
     ws.current.onmessage = (e) =>{
-      const decodedMessage = JSON.parse(e.data) as ISendMessage;
+      const decodedMessage = JSON.parse(e.data);
+      console.log('Received message:', decodedMessage);
 
       if(decodedMessage.type === 'SEND_MESSAGE'){
         setMessage((prevState) => [...prevState, decodedMessage.payload]);
+      }else if(decodedMessage.type === 'IN_COMING_MESSAGE'){
+        setMessage(decodedMessage.payload);
       }
     };
 
@@ -26,17 +28,21 @@ const Home = () => {
     };
 
   }, []);
+
   return (
     <div>
-      {message.map(msg => (
-        <Messages
-          key={msg._id}
-          user = {msg.user.displayName}
-          message={msg.message}
-          date={msg.date}
-        />
-      ))}
-
+      {message.length === 0 ? (
+        <p>No messages</p>
+      ) : (
+        message.map(msg => (
+          <Messages
+            key={msg._id}
+            displayName = {msg.user?.displayName || 'Unknown User'}
+            message={msg.message}
+            date={msg.date}
+          />
+        ))
+      )}
     </div>
   );
 };

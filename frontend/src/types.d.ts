@@ -43,12 +43,10 @@ export interface GlobalError {
 
 export interface IMessages{
   _id: string;
-  user: IUser;
+  user: {
+    _id: string;
+    displayName: string;
+  };
   message: string;
   date: string;
-}
-
-export interface ISendMessage{
-  type: 'SEND_MESSAGE';
-  payload: IMessages;
 }
