@@ -21,3 +21,21 @@ export interface Messages {
     user: Types.ObjectId;
     date: Types.Date;
 }
+
+export interface ClientInfo {
+    ws: WebSocket;
+    username: string;
+}
+
+export interface LoginMessage {
+    type: "LOGIN";
+    payload: string;
+}
+
+export interface SendMessage {
+    type: "SEND_MESSAGE";
+    payload: {
+        user: string;
+        message: string;
+    };
+}
