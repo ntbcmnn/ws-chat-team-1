@@ -6,6 +6,8 @@ import { GOOGLE_CLIENT_ID } from './globalConstants.ts';
 import { persistor, store } from './app/store.ts';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import { ToastContainer } from 'react-toastify';
 
 createRoot(document.getElementById('root')!).render(
@@ -17,6 +19,6 @@ createRoot(document.getElementById('root')!).render(
           <App/>
         </BrowserRouter>
       </PersistGate>
-    </Provider>,
+    </Provider>
   </GoogleOAuthProvider>,
 );
