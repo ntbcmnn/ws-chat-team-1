@@ -8,13 +8,14 @@ export interface UserFields {
     role: string;
     displayName: string;
     googleID?: string;
+    avatar?: string;
 }
 
 export interface ActiveConnections {
     [id: string]: WebSocket
 }
 
-export interface Messages{
+export interface Messages {
     _id: Types.ObjectId;
     message: string;
     user: Types.ObjectId;
