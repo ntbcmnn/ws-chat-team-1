@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { IMessages } from '../../types';
 import Messages from '../../components/Messages/Messages.tsx';
+import MessagesForm from "../../components/MessagesForm/MessagesForm.tsx";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectUser} from "../../store/slices/usersSlice.ts";
 
 const Home = () => {
   const ws = useRef<WebSocket | null>(null);
+  const user = useAppSelector(selectUser);
 
   const[message, setMessage] = useState<IMessages[]>([]);
 
@@ -29,8 +33,21 @@ const Home = () => {
 
   }, []);
 
+  const sendMessage = (text: string) => {
+    if (ws.current) {
+      ws.current.send(JSON.stringify({
+        type: 'SEND_MESSAGE',
+        payload: {
+          user: user,
+          message: text
+        }
+      }));
+    }
+  };
+
   return (
     <div>
+      <MessagesForm onSendMessage={sendMessage}/>
       {message.length === 0 ? (
         <p>No messages</p>
       ) : (
