@@ -11,19 +11,19 @@ const Home = () => {
   const ws = useRef<WebSocket | null>(null);
   const user = useAppSelector(selectUser);
 
-  const[message, setMessage] = useState<IMessages[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<IMessages[]>([]);
+  const [loading, setLoading] = useState(true);
 
 
   useEffect(() => {
     ws.current = new WebSocket('ws://localhost:8000/chat');
 
-    ws.current.onmessage = (e) =>{
+    ws.current.onmessage = (e) => {
       const decodedMessage = JSON.parse(e.data);
 
-      if(decodedMessage.type === 'SEND_MESSAGE'){
+      if (decodedMessage.type === 'SEND_MESSAGE') {
         setMessage((prevState) => [decodedMessage.payload, ...prevState]);
-      }else if(decodedMessage.type === 'INCOMING_MESSAGE'){
+      } else if (decodedMessage.type === 'INCOMING_MESSAGE') {
         setMessage(decodedMessage.payload);
       }
       setLoading(false);
@@ -56,19 +56,23 @@ const Home = () => {
     <div>
       <MessagesForm onSendMessage={sendMessage}/>
       {loading ? (
-        <Loader />
-      ):
+        <Loader/>
+      ) : (
         <>
-          {message.map(msg => (
+          {message.length === 0 ? (
+            <p>No messages</p>
+          ) : (
+            message.map((msg) => (
               <Messages
                 key={msg._id}
-                displayName = {msg.user?.displayName || 'Unknown User'}
+                displayName={msg.user?.displayName || 'Unknown User'}
                 message={msg.message}
                 date={msg.date}
               />
-            ))}
+            ))
+          )}
         </>
-      }
+      )}
     </div>
   );
 };
