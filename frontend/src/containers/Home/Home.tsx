@@ -11,6 +11,7 @@ const Home = () => {
 
   const[message, setMessage] = useState<IMessages[]>([]);
 
+
   useEffect(() => {
     ws.current = new WebSocket('ws://localhost:8000/chat');
 
@@ -19,7 +20,7 @@ const Home = () => {
       console.log('Received message:', decodedMessage);
 
       if(decodedMessage.type === 'SEND_MESSAGE'){
-        setMessage((prevState) => [...prevState, decodedMessage.payload]);
+        setMessage((prevState) => [decodedMessage.payload, ...prevState]);
       }else if(decodedMessage.type === 'INCOMING_MESSAGE'){
         setMessage(decodedMessage.payload);
       }
@@ -39,11 +40,13 @@ const Home = () => {
         type: 'SEND_MESSAGE',
         payload: {
           user: user,
-          message: text
+          message: text,
+          date: new Date().toISOString(),
         }
       }));
     }
   };
+
 
   return (
     <div>

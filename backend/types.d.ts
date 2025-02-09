@@ -37,5 +37,6 @@ export interface SendMessage {
     payload: {
         user: string;
         message: string;
+        date: Date;
     };
 }

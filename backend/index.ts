@@ -64,6 +64,7 @@ router.ws('/chat', async (ws, req) => {
                 const newMessage = new Message({
                     user: decodedMessage.payload.user,
                     message: decodedMessage.payload.message,
+                    date: new Date(),
                 });
                 await newMessage.save();
 
