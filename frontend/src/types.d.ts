@@ -5,6 +5,7 @@ export interface IUser {
   role: string;
   displayName: string;
   googleID?: string;
+  avatar: string | null;
 }
 
 export interface RegisterResponse {
@@ -16,6 +17,7 @@ export interface RegisterMutation {
   username: string;
   password: string;
   displayName: string;
+  avatar: File | null;
 }
 
 export interface LoginMutation {
