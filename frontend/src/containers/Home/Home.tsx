@@ -1,18 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { IMessages } from '../../types';
 import Messages from '../../components/Messages/Messages.tsx';
-import { useAppSelector } from '../../app/hooks.ts';
-import { selectUser } from '../../store/slices/usersSlice.ts';
-import MessagesForm from '../../components/MessagesForm/MessagesForm.tsx';
-import Loader from '../../components/UI/Loader/Loader.tsx';
-
+import MessagesForm from "../../components/MessagesForm/MessagesForm.tsx";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectUser} from "../../store/slices/usersSlice.ts";
 
 const Home = () => {
   const ws = useRef<WebSocket | null>(null);
   const user = useAppSelector(selectUser);
 
   const[message, setMessage] = useState<IMessages[]>([]);
-  const [loading, setLoading] = useState(false);
 
 
   useEffect(() => {
@@ -20,13 +17,13 @@ const Home = () => {
 
     ws.current.onmessage = (e) =>{
       const decodedMessage = JSON.parse(e.data);
+      console.log('Received message:', decodedMessage);
 
       if(decodedMessage.type === 'SEND_MESSAGE'){
         setMessage((prevState) => [decodedMessage.payload, ...prevState]);
       }else if(decodedMessage.type === 'INCOMING_MESSAGE'){
         setMessage(decodedMessage.payload);
       }
-      setLoading(false);
     };
 
     return () => {
@@ -39,7 +36,6 @@ const Home = () => {
 
   const sendMessage = (text: string) => {
     if (ws.current) {
-      setLoading(true);
       ws.current.send(JSON.stringify({
         type: 'SEND_MESSAGE',
         payload: {
@@ -55,20 +51,18 @@ const Home = () => {
   return (
     <div>
       <MessagesForm onSendMessage={sendMessage}/>
-      {loading ? (
-        <Loader />
-      ):
-        <>
-          {message.map(msg => (
-              <Messages
-                key={msg._id}
-                displayName = {msg.user?.displayName || 'Unknown User'}
-                message={msg.message}
-                date={msg.date}
-              />
-            ))}
-        </>
-      }
+      {message.length === 0 ? (
+        <p>No messages</p>
+      ) : (
+        message.map(msg => (
+          <Messages
+            key={msg._id}
+            displayName = {msg.user?.displayName || 'Unknown User'}
+            message={msg.message}
+            date={msg.date}
+          />
+        ))
+      )}
     </div>
   );
 };
