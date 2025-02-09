@@ -16,7 +16,7 @@ const Home = () => {
 
       if(decodedMessage.type === 'SEND_MESSAGE'){
         setMessage((prevState) => [...prevState, decodedMessage.payload]);
-      }else if(decodedMessage.type === 'IN_COMING_MESSAGE'){
+      }else if(decodedMessage.type === 'INCOMING_MESSAGE'){
         setMessage(decodedMessage.payload);
       }
     };

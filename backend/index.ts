@@ -65,9 +65,11 @@ router.ws('/chat', async (ws, req) => {
                     user: decodedMessage.payload.user,
                     message: decodedMessage.payload.message,
                 });
-
                 await newMessage.save();
-                const response = {type: "SEND_MESSAGE", payload: newMessage};
+
+                const saveMsg = await Message.findById(newMessage._id).populate('user', 'displayName');
+
+                const response = {type: "SEND_MESSAGE", payload: saveMsg};
 
                 connectedClients.forEach(client => {
                     client.ws.send(JSON.stringify(response));
