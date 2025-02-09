@@ -81,6 +81,7 @@ const UserSchema = new Schema<
         },
     },
     googleID: String,
+    avatar: String,
 });
 
 UserSchema.pre("save", async function (next) {
