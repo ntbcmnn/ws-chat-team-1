@@ -4,6 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import LoginPage from './containers/LoginPage/LoginPage.tsx';
 import RegisterPage from './containers/RegisterPage/RegisterPage.tsx';
 
+
 const App = () => {
   return <>
     <Toolbar/>

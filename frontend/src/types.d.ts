@@ -47,3 +47,8 @@ export interface IMessages{
   message: string;
   date: string;
 }
+
+export interface ISendMessage{
+  type: 'SEND_MESSAGE';
+  payload: IMessages;
+}

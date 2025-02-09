@@ -36,7 +36,7 @@ router.ws('/chat', async (ws, req) => {
 
     ws.send(
         JSON.stringify({
-            type: 'IN_COMMING_MESSAGE',
+            type: 'IN_COMING_MESSAGE',
             payload: messages,
         }),
     )
