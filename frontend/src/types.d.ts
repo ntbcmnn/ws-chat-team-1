@@ -40,3 +40,10 @@ export interface ValidationError {
 export interface GlobalError {
   error: string;
 }
+
+export interface IMessages{
+  _id: string;
+  user: IUser;
+  message: string;
+  date: string;
+}
