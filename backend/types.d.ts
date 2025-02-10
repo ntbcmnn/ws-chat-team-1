@@ -20,7 +20,7 @@ export interface Messages {
 
 export interface ClientInfo {
     ws: WebSocket;
-    username: string;
+    userId: string;
 }
 
 export interface LoginMessage {
