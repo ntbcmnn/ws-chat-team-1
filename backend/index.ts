@@ -1,13 +1,12 @@
 import express from 'express';
 import expressWs from 'express-ws';
 import cors from 'cors';
-import {WebSocket} from 'ws';
 import usersRouter from './routers/users';
 import config from "./config";
 import mongoose from "mongoose";
-import User from "./models/User";
-import {Messages} from "./types";
+import {ClientInfo, DeleteMessage, LoginMessage, Messages, OnlineUsers, SendMessage} from "./types";
 import {Message} from "./models/Message";
+import User from "./models/User";
 
 const app = express();
 expressWs(app);
@@ -21,72 +20,123 @@ const router = express.Router();
 app.use(router);
 app.use("/users", usersRouter);
 
-const connectedClients: WebSocket[] = [];
+type IncomingMessage = LoginMessage | SendMessage | DeleteMessage;
 
-interface IncomingMessage {
-    type: string;
-    payload: string;
-}
+const connectedClients: ClientInfo[] = [];
+const onlineUser: OnlineUsers[] = []
 
 router.ws('/chat', async (ws, req) => {
-    connectedClients.push(ws);
+    connectedClients.push({ws, userId: ""});
     console.log('Client connected. Client total: ' + connectedClients.length);
 
-    const messages : Messages[] = await Message.find().populate('user', 'displayName').limit(30).sort({ _id: -1 });
+    const messages: Messages[] = await Message.find()
+        .populate('user', 'displayName')
+        .limit(30)
+        .sort({_id: -1});
 
-    ws.send(
-        JSON.stringify({
-            type: 'IN_COMMING_MESSAGE',
-            payload: messages,
-        }),
-    )
+    ws.send(JSON.stringify({
+        type: 'INCOMING_MESSAGE',
+        payload: messages,
+    }));
+
+    ws.send(JSON.stringify({
+        type: 'USER_LIST_UPDATE',
+        payload: onlineUser
+    }));
+
     ws.on('message', async (message) => {
         try {
-            const decodedMessage = JSON.parse(message.toString());
-
+            const decodedMessage = JSON.parse(message.toString()) as IncomingMessage;
             if (decodedMessage.type === "LOGIN") {
-                const token = decodedMessage.payload;
+                const username = decodedMessage.payload;
 
-                if (!token) {
-                    ws.send(JSON.stringify({error: "Invalid token"}))
-                    return;
+                const client = connectedClients.find(client => client.ws === ws);
+
+                if (client) {
+                    client.userId = username;
                 }
 
-                const user = await User.findOne({token})
-                connectedClients.forEach(clientWs => {
-                    clientWs.send(JSON.stringify({
-                        payload:{
-                            username: user?.username
+                const existUser = onlineUser.find(user => user.displayName === username);
+
+                if (!existUser) {
+                    const user = await User.findOne({displayName: username});
+
+                    if (user) {
+                        const newUser: OnlineUsers = {
+                            _id: user._id.toString(),
+                            displayName: user.displayName
                         }
+
+                        onlineUser.push(newUser);
+                    }
+                }
+
+                connectedClients.forEach(client => {
+                    client.ws.send(JSON.stringify({
+                        type: 'USER_LIST_UPDATE',
+                        payload: onlineUser
                     }))
+                })
+            }
+
+            if (decodedMessage.type === "DELETE_MESSAGE") {
+                await Message.findByIdAndDelete(decodedMessage.payload);
+
+                const updatedMessages = await Message.find()
+                    .populate('user', 'displayName')
+                    .limit(30)
+                    .sort({_id: -1});
+
+                connectedClients.forEach(client => {
+                    client.ws.send(JSON.stringify({
+                        type: 'INCOMING_MESSAGE',
+                        payload: updatedMessages,
+                    }));
                 });
             }
 
-            if(decodedMessage.type === "SEND_MESSAGE") {
-
+            if (decodedMessage.type === "SEND_MESSAGE") {
                 const newMessage = new Message({
                     user: decodedMessage.payload.user,
                     message: decodedMessage.payload.message,
-                })
+                    date: new Date(),
+                });
                 await newMessage.save();
 
-                const response = {type: "SEND_MESSAGE", payload: newMessage};
+                const saveMsg = await Message.findById(newMessage._id).populate('user', 'displayName');
 
-                connectedClients.forEach((clientWS) => {
-                    clientWS.send(JSON.stringify(response))
-                })
+                const response = {type: "SEND_MESSAGE", payload: saveMsg};
+
+                connectedClients.forEach(client => {
+                    client.ws.send(JSON.stringify(response));
+                });
             }
         } catch (error) {
-            ws.send(JSON.stringify({error: "Invalid message format"}))
+            ws.send(JSON.stringify({error: "Invalid message format"}));
         }
     });
 
     ws.on('close', () => {
-        console.log('client disconnected');
-        const index = connectedClients.indexOf(ws);
-        connectedClients.splice(index, 1);
-        console.log('Client total: ' + connectedClients.length);
+        const index = connectedClients.findIndex(client => client.ws === ws);
+
+        if (index !== -1) {
+            const disconnectedClient = connectedClients.splice(index, 1)[0];
+            const userIndex = onlineUser.findIndex(user => user._id === disconnectedClient.userId);
+
+            if (userIndex !== -1) {
+                onlineUser.splice(userIndex, 1);
+            }
+
+            connectedClients.forEach(client => {
+                client.ws.send(JSON.stringify({
+                    type: 'USER_LIST_UPDATE',
+                    payload: onlineUser,
+                }));
+            });
+        }
+        console.log('Client disconnected. Client total: ' + connectedClients.length);
     });
+
 });
 
 const run: () => Promise<void> = async () => {
@@ -98,4 +148,3 @@ const run: () => Promise<void> = async () => {
 };
 
 run().catch((err) => console.log(err));
-

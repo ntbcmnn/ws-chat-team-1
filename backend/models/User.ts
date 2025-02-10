@@ -69,7 +69,7 @@ const UserSchema = new Schema<
         type: String,
         required: true,
         default: "user",
-        enum: ["user", "admin"],
+        enum: ["user", "moderator"],
     },
     displayName: {
         type: String,
@@ -81,6 +81,7 @@ const UserSchema = new Schema<
         },
     },
     googleID: String,
+    avatar: String,
 });
 
 UserSchema.pre("save", async function (next) {

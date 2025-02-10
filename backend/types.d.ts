@@ -8,15 +8,41 @@ export interface UserFields {
     role: string;
     displayName: string;
     googleID?: string;
+    avatar?: string;
 }
 
-export interface ActiveConnections {
-    [id: string]: WebSocket
-}
-
-export interface Messages{
+export interface Messages {
     _id: Types.ObjectId;
     message: string;
     user: Types.ObjectId;
     date: Types.Date;
+}
+
+export interface ClientInfo {
+    ws: WebSocket;
+    userId: string;
+}
+
+export interface LoginMessage {
+    type: "LOGIN";
+    payload: string;
+}
+
+export interface SendMessage {
+    type: "SEND_MESSAGE";
+    payload: {
+        user: string;
+        message: string;
+        date: Date;
+    };
+}
+
+export interface DeleteMessage {
+    type: "DELETE_MESSAGE";
+    payload: string
+}
+
+export interface OnlineUsers{
+    _id: string;
+    displayName: string;
 }

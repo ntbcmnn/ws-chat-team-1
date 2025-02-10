@@ -5,6 +5,7 @@ export interface IUser {
   role: string;
   displayName: string;
   googleID?: string;
+  avatar: string | null;
 }
 
 export interface RegisterResponse {
@@ -16,6 +17,7 @@ export interface RegisterMutation {
   username: string;
   password: string;
   displayName: string;
+  avatar: File | null;
 }
 
 export interface LoginMutation {
@@ -37,4 +39,19 @@ export interface ValidationError {
 
 export interface GlobalError {
   error: string;
+}
+
+export interface IMessages{
+  _id: string;
+  user: {
+    _id: string;
+    displayName: string;
+  };
+  message: string;
+  date: string;
+}
+
+export interface IOnlineUser {
+  _id: string;
+  displayName: string;
 }
