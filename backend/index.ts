@@ -6,6 +6,7 @@ import config from "./config";
 import mongoose from "mongoose";
 import {ClientInfo, LoginMessage, Messages, SendMessage} from "./types";
 import {Message} from "./models/Message";
+import messageRouter from "./routers/messages";
 
 const app = express();
 expressWs(app);
@@ -18,6 +19,7 @@ app.use(express.static('public'));
 const router = express.Router();
 app.use(router);
 app.use("/users", usersRouter);
+app.use("/messages", messageRouter);
 
 type IncomingMessage = LoginMessage | SendMessage;
 
@@ -25,6 +27,7 @@ const connectedClients: ClientInfo[] = [];
 
 router.ws('/chat', async (ws, req) => {
     connectedClients.push({ws, username: ""});
+
     console.log('Client connected. Client total: ' + connectedClients.length);
 
     const messages: Messages[] = await Message.find()
