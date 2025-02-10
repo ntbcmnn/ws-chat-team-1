@@ -4,7 +4,7 @@ import cors from 'cors';
 import usersRouter from './routers/users';
 import config from "./config";
 import mongoose from "mongoose";
-import {ClientInfo, LoginMessage, Messages, OnlineUsers, SendMessage} from "./types";
+import {ClientInfo, DeleteMessage, LoginMessage, Messages, OnlineUsers, SendMessage} from "./types";
 import {Message} from "./models/Message";
 import User from "./models/User";
 
@@ -20,7 +20,7 @@ const router = express.Router();
 app.use(router);
 app.use("/users", usersRouter);
 
-type IncomingMessage = LoginMessage | SendMessage;
+type IncomingMessage = LoginMessage | SendMessage | DeleteMessage;
 
 const connectedClients: ClientInfo[] = [];
 const onlineUser: OnlineUsers[] = []
@@ -77,6 +77,22 @@ router.ws('/chat', async (ws, req) => {
                         payload: onlineUser
                     }))
                 })
+            }
+
+            if (decodedMessage.type === "DELETE_MESSAGE") {
+                await Message.findByIdAndDelete(decodedMessage.payload);
+
+                const updatedMessages = await Message.find()
+                    .populate('user', 'displayName')
+                    .limit(30)
+                    .sort({ _id: -1 });
+
+                connectedClients.forEach(client => {
+                    client.ws.send(JSON.stringify({
+                        type: 'INCOMING_MESSAGE',
+                        payload: updatedMessages,
+                    }));
+                });
             }
 
             if (decodedMessage.type === "SEND_MESSAGE") {

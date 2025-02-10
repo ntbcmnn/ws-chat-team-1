@@ -11,10 +11,6 @@ export interface UserFields {
     avatar?: string;
 }
 
-export interface ActiveConnections {
-    [id: string]: WebSocket
-}
-
 export interface Messages {
     _id: Types.ObjectId;
     message: string;
@@ -39,6 +35,11 @@ export interface SendMessage {
         message: string;
         date: Date;
     };
+}
+
+export interface DeleteMessage {
+    type: "DELETE_MESSAGE";
+    payload: string
 }
 
 export interface OnlineUsers{

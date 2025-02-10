@@ -1,9 +1,9 @@
 import {useEffect, useRef, useState} from 'react';
 import { IMessages } from '../../types';
 import Messages from '../../components/Messages/Messages.tsx';
-import MessagesForm from "../../components/MessagesForm/MessagesForm.tsx";
-import {useAppSelector} from "../../app/hooks.ts";
-import {selectUser} from "../../store/slices/usersSlice.ts";
+import MessagesForm from '../../components/MessagesForm/MessagesForm.tsx';
+import {useAppSelector} from '../../app/hooks.ts';
+import {selectUser} from '../../store/slices/usersSlice.ts';
 import Loader from '../../components/UI/Loader/Loader.tsx';
 import OnlineUsers from '../../components/OnlineUsers/OnlineUsers.tsx';
 
@@ -51,6 +51,12 @@ const Home = () => {
         }
     };
 
+  const handleDeleteMessage = (id: string) => {
+    if (ws.current) {
+      ws.current.send(JSON.stringify({ type: 'DELETE_MESSAGE', payload: id }));
+    }
+  };
+
     return (
         <div className="d-flex justify-content-center gap-4">
             <div className="w-50">
@@ -69,6 +75,8 @@ const Home = () => {
                                 displayName={msg.user?.displayName || 'Unknown User'}
                                 message={msg.message}
                                 date={msg.date}
+                                _id={msg._id}
+                                onDelete={handleDeleteMessage}
                             />
                         ))}
                     </>

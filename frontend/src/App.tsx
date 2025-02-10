@@ -18,7 +18,7 @@ const App = () => {
         <Route path="/"
                element={
                  <ProtectedRoute
-                   isAllowed={user && user.role === 'user'}
+                   isAllowed={user && user.role === 'user' || user && user.role === 'moderator'}
                  >
                    <Home/>
                  </ProtectedRoute>
@@ -27,7 +27,7 @@ const App = () => {
         <Route path="/chat"
                element={
                  <ProtectedRoute
-                   isAllowed={user && user.role === 'user'}
+                   isAllowed={user && user.role === 'user' || user && user.role === 'moderator'}
                  >
                    <Home/>
                  </ProtectedRoute>
