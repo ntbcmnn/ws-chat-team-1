@@ -4,8 +4,9 @@ import cors from 'cors';
 import usersRouter from './routers/users';
 import config from "./config";
 import mongoose from "mongoose";
-import {ClientInfo, LoginMessage, Messages, SendMessage} from "./types";
+import {ClientInfo, LoginMessage, Messages, OnlineUsers, SendMessage} from "./types";
 import {Message} from "./models/Message";
+import User from "./models/User";
 
 const app = express();
 expressWs(app);
@@ -22,6 +23,7 @@ app.use("/users", usersRouter);
 type IncomingMessage = LoginMessage | SendMessage;
 
 const connectedClients: ClientInfo[] = [];
+const onlineUser: OnlineUsers[] = []
 
 router.ws('/chat', async (ws, req) => {
     connectedClients.push({ws, username: ""});
@@ -31,9 +33,15 @@ router.ws('/chat', async (ws, req) => {
         .populate('user', 'displayName')
         .limit(30)
         .sort({_id: -1});
+
     ws.send(JSON.stringify({
         type: 'INCOMING_MESSAGE',
         payload: messages,
+    }));
+
+    ws.send(JSON.stringify({
+        type: 'USER_LIST_UPDATE',
+        payload: onlineUser
     }));
 
     ws.on('message', async (message) => {
@@ -48,16 +56,27 @@ router.ws('/chat', async (ws, req) => {
                     client.username = username;
                 }
 
-                const userList = connectedClients
-                    .map(client => client.username)
-                    .filter(name => name !== "");
+                const existUser = onlineUser.find(user => user.displayName === username);
 
-                connectedClients.forEach(client => {
+                if (!existUser) {
+                    const user = await User.findOne({displayName: username});
+
+                    if(user){
+                        const newUser: OnlineUsers = {
+                            _id: user._id.toString(),
+                            displayName: user.displayName
+                        }
+
+                        onlineUser.push(newUser);
+                    }
+                }
+
+                connectedClients.forEach(client =>{
                     client.ws.send(JSON.stringify({
                         type: 'USER_LIST_UPDATE',
-                        payload: userList
-                    }));
-                });
+                        payload: onlineUser
+                    }))
+                })
             }
 
             if (decodedMessage.type === "SEND_MESSAGE") {
@@ -87,19 +106,21 @@ router.ws('/chat', async (ws, req) => {
         const index = connectedClients.findIndex(client => client.ws === ws);
 
         if (index !== -1) {
-            connectedClients.splice(index, 1);
+            const disconnectClient = connectedClients.splice(index,1)[0];
+
+            const userIndex = onlineUser.findIndex(user => user._id === disconnectClient.username)
+
+            if(userIndex !== -1){
+                onlineUser.splice(userIndex, 1);
+            }
+
+            connectedClients.forEach(client => {
+                client.ws.send(JSON.stringify({
+                    type: 'USER_LIST_UPDATE',
+                    payload: onlineUser
+                }))
+            })
         }
-
-        const userList = connectedClients
-            .map(client => client.username)
-            .filter(name => name !== "");
-
-        connectedClients.forEach(client => {
-            client.ws.send(JSON.stringify({
-                type: 'USER_LIST_UPDATE',
-                payload: userList
-            }));
-        });
 
         console.log('Client total: ' + connectedClients.length);
     });

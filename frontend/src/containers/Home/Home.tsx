@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {IMessages} from '../../types';
+import { IMessages } from '../../types';
 import Messages from '../../components/Messages/Messages.tsx';
 import MessagesForm from "../../components/MessagesForm/MessagesForm.tsx";
 import {useAppSelector} from "../../app/hooks.ts";

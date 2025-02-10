@@ -40,3 +40,8 @@ export interface SendMessage {
         date: Date;
     };
 }
+
+export interface OnlineUsers{
+    _id: string;
+    displayName: string;
+}

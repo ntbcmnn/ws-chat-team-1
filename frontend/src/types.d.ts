@@ -50,3 +50,8 @@ export interface IMessages{
   message: string;
   date: string;
 }
+
+export interface IOnlineUser {
+  _id: string;
+  displayName: string;
+}
