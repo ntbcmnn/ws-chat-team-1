@@ -26,7 +26,7 @@ const connectedClients: ClientInfo[] = [];
 const onlineUser: OnlineUsers[] = []
 
 router.ws('/chat', async (ws, req) => {
-    connectedClients.push({ws, username: ""});
+    connectedClients.push({ws, userId: ""});
     console.log('Client connected. Client total: ' + connectedClients.length);
 
     const messages: Messages[] = await Message.find()
@@ -53,7 +53,7 @@ router.ws('/chat', async (ws, req) => {
                 const client = connectedClients.find(client => client.ws === ws);
 
                 if (client) {
-                    client.username = username;
+                    client.userId = username;
                 }
 
                 const existUser = onlineUser.find(user => user.displayName === username);
@@ -61,7 +61,7 @@ router.ws('/chat', async (ws, req) => {
                 if (!existUser) {
                     const user = await User.findOne({displayName: username});
 
-                    if(user){
+                    if (user) {
                         const newUser: OnlineUsers = {
                             _id: user._id.toString(),
                             displayName: user.displayName
@@ -71,7 +71,7 @@ router.ws('/chat', async (ws, req) => {
                     }
                 }
 
-                connectedClients.forEach(client =>{
+                connectedClients.forEach(client => {
                     client.ws.send(JSON.stringify({
                         type: 'USER_LIST_UPDATE',
                         payload: onlineUser
@@ -85,7 +85,7 @@ router.ws('/chat', async (ws, req) => {
                 const updatedMessages = await Message.find()
                     .populate('user', 'displayName')
                     .limit(30)
-                    .sort({ _id: -1 });
+                    .sort({_id: -1});
 
                 connectedClients.forEach(client => {
                     client.ws.send(JSON.stringify({
@@ -117,29 +117,26 @@ router.ws('/chat', async (ws, req) => {
     });
 
     ws.on('close', () => {
-        console.log('Client disconnected');
-
         const index = connectedClients.findIndex(client => client.ws === ws);
 
         if (index !== -1) {
-            const disconnectClient = connectedClients.splice(index,1)[0];
+            const disconnectedClient = connectedClients.splice(index, 1)[0];
+            const userIndex = onlineUser.findIndex(user => user._id === disconnectedClient.userId);
 
-            const userIndex = onlineUser.findIndex(user => user._id === disconnectClient.username)
-
-            if(userIndex !== -1){
+            if (userIndex !== -1) {
                 onlineUser.splice(userIndex, 1);
             }
 
             connectedClients.forEach(client => {
                 client.ws.send(JSON.stringify({
                     type: 'USER_LIST_UPDATE',
-                    payload: onlineUser
-                }))
-            })
+                    payload: onlineUser,
+                }));
+            });
         }
-
-        console.log('Client total: ' + connectedClients.length);
+        console.log('Client disconnected. Client total: ' + connectedClients.length);
     });
+
 });
 
 const run: () => Promise<void> = async () => {
